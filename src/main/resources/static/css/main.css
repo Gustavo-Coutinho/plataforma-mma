@@ -1,0 +1,270 @@
+/* ===================================
+   MMA Facial Authentication System
+   Custom CSS Styles
+   =================================== */
+
+:root {
+    --mma-primary: #1e7e34;
+    --mma-secondary: #28a745;
+    --mma-success: #20c997;
+    --mma-info: #17a2b8;
+    --mma-warning: #ffc107;
+    --mma-danger: #dc3545;
+    --mma-dark: #343a40;
+    --mma-light: #f8f9fa;
+}
+
+/* Background Gradient */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--mma-primary) 0%, var(--mma-secondary) 100%);
+    min-height: 100vh;
+}
+
+/* Camera Styles */
+.camera-container {
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.camera-view {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 13px;
+}
+
+.camera-placeholder {
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.camera-placeholder:hover {
+    color: var(--mma-primary) !important;
+    transform: translateY(-5px);
+}
+
+.camera-loading {
+    text-align: center;
+    color: var(--mma-primary);
+}
+
+/* Face Detection Overlay */
+.face-detection-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.face-box {
+    position: absolute;
+    border: 3px solid var(--mma-success);
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(32, 201, 151, 0.5);
+    transition: all 0.2s ease;
+}
+
+.face-box.detected {
+    border-color: var(--mma-success);
+    box-shadow: 0 0 20px rgba(32, 201, 151, 0.8);
+}
+
+.face-box.processing {
+    border-color: var(--mma-warning);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Cards */
+.card {
+    border-radius: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 10px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--mma-primary), var(--mma-secondary));
+    border: none;
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, var(--mma-primary), var(--mma-secondary));
+    border-color: var(--mma-primary);
+}
+
+/* Form Controls */
+.form-control {
+    border-radius: 10px;
+    border: 2px solid #e3e6f0;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--mma-primary);
+    box-shadow: 0 0 0 0.2rem rgba(30, 126, 52, 0.25);
+}
+
+/* Status Messages */
+.status-message {
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    animation: slideInDown 0.5s ease;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Loading Spinner */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+/* Navigation */
+.navbar-brand img {
+    filter: brightness(0) invert(1);
+}
+
+/* Footer */
+footer a {
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .camera-view {
+        height: 200px;
+    }
+    
+    .container-fluid {
+        padding: 0 15px;
+    }
+    
+    .card-body {
+        padding: 1.5rem !important;
+    }
+}
+
+/* Security Features Icons */
+.security-feature {
+    transition: transform 0.3s ease;
+}
+
+.security-feature:hover {
+    transform: scale(1.1);
+}
+
+/* Face Quality Indicator */
+.quality-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+}
+
+.quality-good { background: rgba(32, 201, 151, 0.8) !important; }
+.quality-medium { background: rgba(255, 193, 7, 0.8) !important; }
+.quality-poor { background: rgba(220, 53, 69, 0.8) !important; }
+
+/* Accessibility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid #000;
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

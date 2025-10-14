@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Dashboard</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .section {
+            background: #2d2d2d;
+            border: 1px solid #3e3e3e;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #4ec9b0;
+            margin-top: 0;
+        }
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        .error {
+            color: #f48771;
+        }
+        .success {
+            color: #b5cea8;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Dashboard Debug Tool</h1>
+    
+    <div class="section">
+        <h2>1. Auth Token</h2>
+        <pre id="tokenInfo"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>2. User Data (Raw)</h2>
+        <pre id="userDataRaw"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>3. User Data (Parsed)</h2>
+        <pre id="userDataParsed"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>4. Roles Check</h2>
+        <pre id="rolesCheck"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>5. API Test - /api/users/me/stats</h2>
+        <pre id="apiTestStats"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>6. API Test - /api/users</h2>
+        <pre id="apiTestUsers"></pre>
+    </div>
+
+    <script>
+        // 1. Check token
+        const token = localStorage.getItem('mma_auth_token');
+        document.getElementById('tokenInfo').textContent = token 
+            ? `✓ Token exists (${token.length} chars):\n${token.substring(0, 50)}...` 
+            : '✗ No token found';
+
+        // 2. Raw user data
+        const userDataRaw = localStorage.getItem('mma_user_data');
+        document.getElementById('userDataRaw').textContent = userDataRaw || '✗ No user data found';
+
+        // 3. Parsed user data
+        let currentUser = null;
+        try {
+            if (userDataRaw) {
+                currentUser = JSON.parse(userDataRaw);
+                document.getElementById('userDataParsed').innerHTML = 
+                    '<span class="success">✓ Successfully parsed:</span>\n' + 
+                    JSON.stringify(currentUser, null, 2);
+            } else {
+                document.getElementById('userDataParsed').innerHTML = 
+                    '<span class="error">✗ No data to parse</span>';
+            }
+        } catch (e) {
+            document.getElementById('userDataParsed').innerHTML = 
+                '<span class="error">✗ Parse error: ' + e.message + '</span>';
+        }
+
+        // 4. Roles check
+        if (currentUser && currentUser.roles) {
+            let rolesInfo = `✓ Roles found: ${currentUser.roles.length}\n\n`;
+            currentUser.roles.forEach((role, index) => {
+                rolesInfo += `[${index}] ${role}\n`;
+                rolesInfo += `  - Is ROLE_MINISTRO: ${role === 'ROLE_MINISTRO'}\n`;
+                rolesInfo += `  - Is ROLE_PERFIL_2: ${role === 'ROLE_PERFIL__2'}\n`;
+                rolesInfo += `  - Is ROLE_PERFIL_1: ${role === 'ROLE_PERFIL__1'}\n\n`;
+            });
+            document.getElementById('rolesCheck').textContent = rolesInfo;
+        } else {
+            document.getElementById('rolesCheck').innerHTML = 
+                '<span class="error">✗ No roles found in user data</span>';
+        }
+
+        // 5. Test API - stats
+        async function testStatsAPI() {
+            if (!token) {
+                document.getElementById('apiTestStats').innerHTML = 
+                    '<span class="error">✗ Cannot test - no token</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users/me/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    document.getElementById('apiTestStats').innerHTML = 
+                        `<span class="error">✗ HTTP ${response.status}: ${response.statusText}</span>`;
+                    return;
+                }
+
+                const data = await response.json();
+                document.getElementById('apiTestStats').innerHTML = 
+                    '<span class="success">✓ Success:</span>\n' + 
+                    JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('apiTestStats').innerHTML = 
+                    `<span class="error">✗ Error: ${error.message}</span>`;
+            }
+        }
+
+        // 6. Test API - users list
+        async function testUsersAPI() {
+            if (!token) {
+                document.getElementById('apiTestUsers').innerHTML = 
+                    '<span class="error">✗ Cannot test - no token</span>';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    document.getElementById('apiTestUsers').innerHTML = 
+                        `<span class="error">✗ HTTP ${response.status}: ${response.statusText}\n` +
+                        `(This is expected for ROLE_PERFIL_1 users - requires ROLE_PERFIL_2+)</span>`;
+                    return;
+                }
+
+                const data = await response.json();
+                document.getElementById('apiTestUsers').innerHTML = 
+                    '<span class="success">✓ Success:</span>\n' + 
+                    `Total users: ${data.length}\n` +
+                    JSON.stringify(data.slice(0, 3), null, 2) +
+                    (data.length > 3 ? `\n... and ${data.length - 3} more` : '');
+            } catch (error) {
+                document.getElementById('apiTestUsers').innerHTML = 
+                    `<span class="error">✗ Error: ${error.message}</span>`;
+            }
+        }
+
+        // Run API tests
+        testStatsAPI();
+        testUsersAPI();
+    </script>
+</body>
+</html>
