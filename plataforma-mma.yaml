@@ -1,0 +1,316 @@
+# Docker Compose para Plataforma de Inteligência Ambiental - MMA
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:14-alpine
+    container_name: mma-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mma_biometric_db}
+      POSTGRES_USER: ${DB_USER:-mma_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mma_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "${DB_PORT:-127.0.0.1:5432}:5432"
+    networks:
+      - mma-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-mma_user} -d ${DB_NAME:-mma_biometric_db}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Aplicação Spring Boot
+  app:
+    image: gupoco/plataforma-mma:latest
+    pull_policy: if_not_present # 'always|never|build|if_not_present|missing|refresh|daily|weekly|every_([0-9]+[wdhms])+'
+    container_name: plataforma-mma
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Configurações do banco de dados - Spring Boot naming
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-mma_biometric_db}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-mma_user}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-mma_password}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      
+      # Flyway configuration
+      SPRING_FLYWAY_ENABLED: ${FLYWAY_ENABLED:-true}
+      SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-mma_biometric_db}
+      SPRING_FLYWAY_USER: ${DB_USER:-mma_user}
+      SPRING_FLYWAY_PASSWORD: ${DB_PASSWORD:-mma_password}
+      SPRING_FLYWAY_VALIDATE_ON_MIGRATE: ${FLYWAY_VALIDATE_ON_MIGRATE:-false}
+      SPRING_FLYWAY_OUT_OF_ORDER: ${FLYWAY_OUT_OF_ORDER:-true}
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: ${FLYWAY_BASELINE_ON_MIGRATE:-true}
+      
+      # JPA/Hibernate configuration
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${HIBERNATE_DDL_AUTO:-validate}
+      SPRING_JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: ${HIBERNATE_FORMAT_SQL:-false}
+      SPRING_JPA_PROPERTIES_HIBERNATE_USE_SQL_COMMENTS: ${HIBERNATE_USE_SQL_COMMENTS:-false}
+
+      # Configurações JWT
+      JWT_SECRET: ${JWT_SECRET:-mma-ultra-secure-secret-key-2024-ministry-environment}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+
+      # Configurações biométricas
+      FACE_THRESHOLD: ${FACE_THRESHOLD:-0.75}
+      ENABLE_LIVENESS: ${ENABLE_LIVENESS:-true}
+
+      # Configurações de ambiente
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-production}
+      LOGGING_LEVEL_ROOT: ${LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_BR_GOV_MMA: ${LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_ORG_APACHE_COYOTE_HTTP11_HTTP11PROCESSOR: WARN
+      LOGGING_LEVEL_ORG_APACHE_TOMCAT_UTIL_NET: WARN
+      LOGGING_LEVEL_ORG_APACHE_CATALINA: INFO
+
+      # Configurações de rate limiting
+      RATE_LIMIT_LOGIN: ${RATE_LIMIT_LOGIN:-5}
+      RATE_LIMIT_BIOMETRIC: ${RATE_LIMIT_BIOMETRIC:-3}
+
+      # CORS - default to the configured DOMAIN for production deployments
+      # Set CORS_ALLOWED_ORIGINS explicitly to override (comma-separated list supported)
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://${DOMAIN:-localhost}}
+     
+      # Actuator and Metrics Configuration
+      MANAGEMENT_METRICS_ENABLE_PROCESS: ${METRICS_ENABLE_PROCESS:-false}
+      MANAGEMENT_METRICS_ENABLE_SYSTEM: ${METRICS_ENABLE_SYSTEM:-false}
+      MANAGEMENT_HEALTH_DISKSPACE_ENABLED: ${HEALTH_DISKSPACE_ENABLED:-true}
+
+      # Library path configuration for OpenCV
+      LD_LIBRARY_PATH: /usr/local/lib/opencv:/usr/lib:/lib:/tmp/opencv-links
+      JAVA_TOOL_OPTIONS: -Djava.library.path=/usr/local/lib/opencv:/usr/lib:/lib -Dnu.pattern.opencv.lib.path=/usr/local/lib/opencv
+    volumes:
+      - app_logs:/app/logs
+      - app_data:/app/data
+      - app_temp:/app/temp
+    networks:
+      - mma-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      # Enable Traefik for this service
+      - "traefik.enable=true"
+      
+      # HTTP to HTTPS redirect
+      - "traefik.http.routers.mma-http.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.mma-http.entrypoints=web"
+      - "traefik.http.routers.mma-http.middlewares=redirect-to-https@file"
+      
+      # HTTPS router
+      - "traefik.http.routers.mma-https.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.mma-https.entrypoints=websecure"
+      - "traefik.http.routers.mma-https.tls=true"
+      - "traefik.http.routers.mma-https.middlewares=security-headers@file,rate-limit@file,ddos-protection@file,compress@file"
+      - "traefik.http.routers.mma-https.tls.certresolver=letsencrypt"      
+      # Service configuration
+      - "traefik.http.services.mma-app.loadbalancer.server.port=8080"
+      - "traefik.http.services.mma-app.loadbalancer.healthcheck.path=/actuator/health"
+      - "traefik.http.services.mma-app.loadbalancer.healthcheck.interval=30s"
+
+  # Redis para cache (opcional)
+  redis:
+    image: redis:7-alpine
+    container_name: mma-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_pass}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-127.0.0.1:6379}:6379"
+    networks:
+      - mma-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Traefik reverse proxy with advanced security
+  traefik:
+    image: traefik:v2.11
+    container_name: mma-traefik
+    restart: unless-stopped
+    command:
+      # API and Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      
+      # Ping endpoint for healthcheck
+      - "--ping=true"
+      - "--ping.entrypoint=web"
+      
+      # Docker provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=${COMPOSE_PROJECT_NAME:-facial-biometric-auth-system}_mma-network"
+      
+      # File provider for dynamic configuration
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      
+      # TLS 1.3 enforcement
+      - "--entrypoints.websecure.http.tls.options=modern@file"
+      - "--entrypoints.websecure.http.tls.certResolver=letsencrypt"
+      
+      # HTTP/2 and HTTP/3
+      - "--entrypoints.websecure.http2.maxConcurrentStreams=250"
+      
+      # Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      
+      # Logging
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-INFO}"
+      - "--log.filepath=/var/log/traefik/traefik.log"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/var/log/traefik/access.log"
+      - "--accesslog.bufferingsize=100"
+      
+      # Security
+      - "--global.sendAnonymousUsage=false"
+    ports:
+      - "${TRAEFIK_HTTP_PORT:-80}:80"
+      - "${TRAEFIK_HTTPS_PORT:-443}:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+      - traefik_logs:/var/log/traefik
+      - ./docker/traefik:/etc/traefik/dynamic:ro
+    networks:
+      - mma-network
+    environment:
+      - TZ=${TZ:-America/Sao_Paulo}
+    labels:
+      # Dashboard configuration (secure)
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`${TRAEFIK_DOMAIN:-traefik.localhost}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls=true"
+      - "traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth@docker,security-headers@file"
+      
+      # Dashboard basic auth (user: admin, password: change-this-password)
+      # Generate with: htpasswd -nb admin your-password
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH:-admin:$$apr1$$yp422Py0$$TTFSpFYID7IKB0DKqYL7t/}"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - production
+
+  # Traefik for development (localhost with self-signed certs)
+  traefik-dev:
+    image: traefik:v2.11
+    container_name: mma-traefik-dev
+    restart: unless-stopped
+    command:
+      # API and Dashboard
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      
+      # Ping endpoint for healthcheck
+      - "--ping=true"
+      - "--ping.entrypoint=web"
+      
+      # Docker provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=${COMPOSE_PROJECT_NAME:-facial-biometric-auth-system}_mma-network"
+      
+      # File provider for dynamic configuration
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      
+      # TLS configuration for development
+      - "--entrypoints.websecure.http.tls.options=modern@file"
+      
+      # HTTP/2
+      - "--entrypoints.websecure.http2.maxConcurrentStreams=250"
+      
+      # Logging
+      - "--log.level=DEBUG"
+      - "--log.filepath=/var/log/traefik/traefik.log"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/var/log/traefik/access.log"
+      - "--accesslog.bufferingsize=100"
+      
+      # Security
+      - "--global.sendAnonymousUsage=false"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_logs:/var/log/traefik
+      - ./docker/traefik:/etc/traefik/dynamic:ro
+      - ./docker/traefik/certs:/etc/traefik/certs:ro
+    networks:
+      - mma-network
+    environment:
+      - TZ=America/Sao_Paulo
+    labels:
+      # Dashboard configuration for development
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard-dev.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik-dashboard-dev.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard-dev.tls=true"
+      - "traefik.http.routers.traefik-dashboard-dev.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard-dev.middlewares=security-headers@file"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - development
+
+# Volumes nomeados para persistência de dados
+volumes:
+  postgres_data:
+    driver: local
+  app_logs:
+    driver: local
+  app_data:
+    driver: local
+  app_temp:
+    driver: local
+  redis_data:
+    driver: local
+  traefik_letsencrypt:
+    driver: local
+  traefik_logs:
+    driver: local
+
+# Rede customizada
+networks:
+  mma-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
