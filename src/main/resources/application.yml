@@ -1,0 +1,227 @@
+# Configuração Principal do Plataforma de Inteligência Ambiental
+# Ministério do Meio Ambiente - Brasil
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: facial-biometric-auth-system
+
+  # Configuração do Banco de Dados PostgreSQL
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mma_biometric_db}
+    username: ${DB_USER:mma_user}
+    password: ${DB_PASSWORD:mma_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # Configuração JPA/Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 25
+          lob:
+            non_contextual_creation: true
+
+  # Configuração Flyway
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  # Configuração de Upload de Arquivos
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
+
+  # Configuração de Cache
+  cache:
+    type: simple
+    cache-names:
+      - userCache
+      - biometricTemplates
+
+# Configurações Específicas da Aplicação
+app:
+  # Configuração JWT
+  jwt:
+    secret: ${JWT_SECRET:mma-facial-auth-secret-key-2024-ultra-secure-ministry-environment-brazil}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000} # 1 hora
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400000} # 24 horas
+
+  # Configuração de Autenticação Biométrica
+  biometric:
+    face:
+      threshold: ${FACE_THRESHOLD:0.75} # Limiar de similaridade para reconhecimento facial
+      enable-liveness: ${ENABLE_LIVENESS:true}
+      lbph:
+        radius: 2
+        neighbors: 16
+        grid-x: 8
+        grid-y: 8
+      cascade-classifier-path: "haarcascade_frontalface_default.xml"
+      min-face-size: 128
+      enrollment-frames-required: 5
+
+  # Configuração de Segurança
+  security:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+      allowed-headers: "*"
+      allow-credentials: true
+    rate-limiting:
+      login-attempts-per-minute: 5
+      biometric-attempts-per-minute: 3
+
+  # Configuração de Auditoria
+  audit:
+    enabled: true
+    log-to-database: true
+    log-to-file: true
+    retention-days: 365
+
+# Configuração de Logging
+logging:
+  level:
+    br.gov.mma.facial: ${LOG_LEVEL:INFO}
+    org.springframework.security: WARN
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+    org.springframework.web: INFO
+    org.apache.coyote.http11.Http11Processor: INFO
+    org.apache.tomcat.util.net: INFO
+    org.apache.catalina: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId}] %logger{36} - %msg%n"
+  file:
+    name: logs/mma-facial-auth.log
+    max-size: 100MB
+    max-history: 30
+
+# Configuração do Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers,auditevents
+  endpoint:
+    health:
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true
+  auditevents:
+    retention:
+      time-to-live: 7d
+  metrics:
+    enable:
+      # Disable cgroup-based metrics that cause issues in Docker with JDK 17+
+      process.cpu: ${METRICS_ENABLE_PROCESS:false}
+      system.cpu: ${METRICS_ENABLE_SYSTEM:false}
+      jvm.memory.used: true
+      jvm.memory.max: true
+      jvm.threads.live: true
+
+# Perfis de Execução
+---
+spring:
+  config:
+    activate:
+      on-profile: development
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mma_biometric_dev
+    username: dev_user
+    password: dev_password
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    br.gov.mma.facial: INFO
+    org.hibernate.SQL: INFO
+    org.apache.coyote.http11.Http11Processor: WARN
+    org.apache.tomcat.util.net: WARN
+
+app:
+  biometric:
+    face:
+      threshold: 0.65 # Limiar mais permissivo para desenvolvimento
+      enable-liveness: false # Desabilitado para testes
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+  datasource:
+    hikari:
+      maximum-pool-size: 50
+
+logging:
+  level:
+    root: WARN
+    br.gov.mma.facial: INFO
+
+app:
+  biometric:
+    face:
+      threshold: 70 # Limiar ajustado para aceitar scores ~50-60
+      enable-liveness: true
+  security:
+    rate-limiting:
+      login-attempts-per-minute: 3
+      biometric-attempts-per-minute: 2
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false
+
+app:
+  biometric:
+    face:
+      threshold: 0.5 # Limiar baixo para testes
+      enable-liveness: false
