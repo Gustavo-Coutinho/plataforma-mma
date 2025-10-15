@@ -1,0 +1,47 @@
+# Development Middlewares Configuration
+http:
+  middlewares:
+    # HTTPS redirect
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    
+    # Security Headers (relaxed for development)
+    security-headers:
+      headers:
+        # HSTS disabled for development
+        stsSeconds: 0
+        
+        # Security Headers
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        
+        # Custom Security Headers
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+        customResponseHeaders:
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "SAMEORIGIN"
+          X-XSS-Protection: "1; mode=block"
+    
+    # Relaxed Rate Limiting for development
+    rate-limit:
+      rateLimit:
+        average: 1000
+        period: 1m
+        burst: 500
+    
+    # Minimal DDoS Protection for development
+    ddos-protection:
+      buffering:
+        maxRequestBodyBytes: 52428800  # 50MB for development
+        memRequestBodyBytes: 10485760  # 10MB
+        maxResponseBodyBytes: 52428800 # 50MB
+        memResponseBodyBytes: 10485760 # 10MB
+    
+    # Compression
+    compress:
+      compress: {}

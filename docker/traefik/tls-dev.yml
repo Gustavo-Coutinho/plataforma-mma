@@ -1,0 +1,18 @@
+# TLS Configuration for Development - Self-signed certificates
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/localhost.crt
+      keyFile: /etc/traefik/certs/localhost.key
+  
+  options:
+    modern:
+      minVersion: VersionTLS13
+      sniStrict: false
+      preferServerCipherSuites: true
+      cipherSuites:
+        - TLS_AES_128_GCM_SHA256
+        - TLS_AES_256_GCM_SHA384
+        - TLS_CHACHA20_POLY1305_SHA256
+      curvePreferences:
+        - CurveP521
+        - CurveP384
