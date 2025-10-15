@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Dashboard - MMA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e5128 0%, #2d6a4f 50%, #40916c 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .dashboard-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header h1 {
+            color: #1e5128;
+            margin: 0;
+            font-size: 28px;
+        }
+        
+        .header .user-info {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card .icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card.success .icon {
+            color: #52b788;
+        }
+        
+        .stat-card.info .icon {
+            color: #2d6a4f;
+        }
+        
+        .stat-card.warning .icon {
+            color: #ffc107;
+        }
+        
+        .stat-card h3 {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1e5128;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .content-card h2 {
+            color: #1e5128;
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #2d6a4f 0%, #1e5128 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 106, 79, 0.3);
+            color: white;
+        }
+        
+        .btn-logout {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .welcome-message {
+            background: linear-gradient(135deg, #52b788 0%, #2d6a4f 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .biometric-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .biometric-status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .biometric-status i {
+            font-size: 24px;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 5px;
+            margin-top: 5px;
+        }
+        
+        .role-badge.ministro {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        
+        .role-badge.perfil2 {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: white;
+        }
+        
+        .role-badge.perfil1 {
+            background: linear-gradient(135deg, #52b788 0%, #2d6a4f 100%);
+            color: white;
+        }
+        
+        .role-section {
+            display: none;
+        }
+        
+        .role-section.visible {
+            display: block;
+        }
+        
+        .data-table {
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            color: #1e5128;
+        }
+        
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .alert-custom {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        /* Responsive logo styles */
+        .header-logos {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-logos img {
+            height: 40px;
+            max-width: 260px;
+            width: auto;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .header-logos img {
+                height: 32px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-logos img {
+                height: 28px;
+            }
+            .header {
+                padding: 15px;
+            }
+            .header .d-flex {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+        .header-seal {
+            height: 40px;
+            width: auto;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .header-seal {
+                height: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center" style="gap: 16px;">
+                    <div class="header-logos">
+                        <a href="https://www.gov.br/pt-br" target="_blank" rel="noopener" aria-label="Governo Federal">
+                            <img src="/images/govbr-logo.svg" alt="GovBR" />
+                        </a>
+                        <img src="/images/MMA_HORIZONTAL_marca_COMPLETA_RGB.png" alt="MMA - Ministério do Meio Ambiente" style="height:40px; max-width:320px;" />
+                    </div>
+                    <div>
+                        <h1 style="margin-bottom:0;"><i class="fas fa-tachometer-alt"></i> Dashboard - Sistema MMA</h1>
+                        <div class="user-info">
+                            <span id="userName">Bem-vindo!</span> | 
+                            <span id="userEmail"></span>
+                        </div>
+                        <div id="userRoles" class="mt-2"></div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center" style="gap:12px;">
+                    <img src="/images/mma-seal.svg" alt="MMA Seal" class="header-seal" />
+                    <button class="btn btn-danger" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Message -->
+        <div class="welcome-message">
+            <h3><i class="fas fa-check-circle"></i> Bem-vindo ao Sistema de Autenticação Biométrica</h3>
+            <p class="mb-0">Sua biometria facial está registrada e o sistema está pronto para uso.</p>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card success">
+                <div class="icon"><i class="fas fa-user-check"></i></div>
+                <h3>Status da Conta</h3>
+                <div class="value">Ativa</div>
+            </div>
+            
+            <div class="stat-card info">
+                <div class="icon"><i class="fas fa-fingerprint"></i></div>
+                <h3>Biometria Facial</h3>
+                <div class="value">Cadastrada</div>
+            </div>
+            
+            <div class="stat-card warning">
+                <div class="icon"><i class="fas fa-clock"></i></div>
+                <h3>Último Acesso</h3>
+                <div class="value" id="lastAccess">Agora</div>
+            </div>
+            
+            <div class="stat-card info role-section" id="stat-total-users">
+                <div class="icon"><i class="fas fa-users"></i></div>
+                <h3>Total de Usuários</h3>
+                <div class="value" id="totalUsers">-</div>
+            </div>
+        </div>
+
+        <!-- ROLE_MINISTRO Section -->
+        <div class="content-card role-section" id="section-ministro">
+            <h2><i class="fas fa-crown"></i> Painel do Ministro - Informações Ultrasecretas</h2>
+            <div class="alert-custom" style="background: #ffebee; border-left: 4px solid #c62828;">
+                <strong><i class="fas fa-lock"></i> Acesso Exclusivo do Ministro</strong><br>
+                Informações estratégicas ULTRASECRETAS sobre agrotóxicos proibidos, grandes infratores e impactos ambientais críticos em lençóis freáticos, rios e mares. Acesso exclusivo do Ministro do Meio Ambiente.
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h4><i class="fas fa-chart-bar"></i> Estatísticas Ambientais</h4>
+                    <div class="data-table">
+                        <table class="table table-sm">
+                            <tr style="background: #e8f5e9;"><td colspan="2"><strong>Propriedades Rurais</strong></td></tr>
+                            <tr><td>Total de Propriedades:</td><td id="ministro-total-propriedades">-</td></tr>
+                            <tr><td>Propriedades Irregulares:</td><td id="ministro-propriedades-irregulares" style="color: #d32f2f; font-weight: bold;">-</td></tr>
+                            
+                            <tr style="background: #fff3e0;"><td colspan="2"><strong>Fiscalizações</strong></td></tr>
+                            <tr><td>Total de Fiscalizações:</td><td id="ministro-total-fiscalizacoes">-</td></tr>
+                            <tr><td>Fiscalizações em Andamento:</td><td id="ministro-fiscalizacoes-abertas">-</td></tr>
+                            
+                            <tr style="background: #e3f2fd;"><td colspan="2"><strong>Relatórios</strong></td></tr>
+                            <tr><td>Total de Relatórios:</td><td id="ministro-total-relatorios">-</td></tr>
+                            <tr><td>Relatórios Ultrasecretos:</td><td id="ministro-relatorios-ultrasecretos" style="color: #c62828; font-weight: bold;">-</td></tr>
+                            
+                            <tr style="background: #fce4ec;"><td colspan="2"><strong>Agrotóxicos</strong></td></tr>
+                            <tr><td>Total Catalogados:</td><td id="ministro-total-agrotoxicos">-</td></tr>
+                            <tr><td>Proibidos/Banidos:</td><td id="ministro-agrotoxicos-proibidos" style="color: #c62828; font-weight: bold;">-</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4><i class="fas fa-users"></i> Estatísticas do Sistema</h4>
+                    <div class="data-table">
+                        <table class="table table-sm">
+                            <tr><td><strong>Total de Usuários:</strong></td><td id="ministro-total-users">-</td></tr>
+                            <tr><td><strong>Autenticações Hoje:</strong></td><td id="ministro-auth-today">-</td></tr>
+                            <tr><td><strong>Taxa de Sucesso:</strong></td><td id="ministro-success-rate">-</td></tr>
+                            <tr><td><strong>Templates Biométricos:</strong></td><td id="ministro-total-templates">-</td></tr>
+                        </table>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;"><i class="fas fa-tasks"></i> Ações Executivas</h4>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="viewUltrasecretReports()">
+                            <i class="fas fa-user-secret"></i>
+                            <span>Relatórios Ultrasecretos</span>
+                        </button>
+                        <button class="action-btn" onclick="viewAllReports()">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Todos os Relatórios</span>
+                        </button>
+                        <button class="action-btn" onclick="viewAuditLogs()">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Logs de Auditoria</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROLE_PERFIL_2 Section -->
+        <div class="content-card role-section" id="section-perfil2">
+            <h2><i class="fas fa-user-shield"></i> Painel de Diretores - Informações Restritas</h2>
+            <div class="alert-custom" style="background: #fff3e0; border-left: 4px solid #ff9800;">
+                <strong><i class="fas fa-shield-alt"></i> Acesso de Diretores</strong><br>
+                Informações estratégicas RESTRITAS sobre fiscalizações, propriedades irregulares, impactos ambientais e contaminação de recursos hídricos. Acesso para Diretores de Divisões e Ministro.
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Informações Estratégicas</h4>
+                    <div class="data-table">
+                        <table class="table table-sm">
+                            <tr style="background: #fff3e0;"><td colspan="2"><strong>Propriedades e Fiscalizações</strong></td></tr>
+                            <tr><td>Propriedades Monitoradas:</td><td id="perfil2-total-propriedades">-</td></tr>
+                            <tr><td>Irregularidades Críticas:</td><td id="perfil2-propriedades-irregulares" style="color: #d32f2f; font-weight: bold;">-</td></tr>
+                            <tr><td>Fiscalizações Realizadas:</td><td id="perfil2-total-fiscalizacoes">-</td></tr>
+                            <tr><td>Multas Aplicadas (R$):</td><td id="perfil2-total-multas">-</td></tr>
+                            
+                            <tr style="background: #e3f2fd;"><td colspan="2"><strong>Impactos Ambientais</strong></td></tr>
+                            <tr><td>Relatórios Restritos:</td><td id="perfil2-relatorios-restritos">-</td></tr>
+                            <tr><td>Agrotóxicos Proibidos/Banidos:</td><td id="perfil2-agrotoxicos-proibidos" style="color: #c62828; font-weight: bold;">-</td></tr>
+                            <tr><td>Áreas com Contaminação:</td><td id="perfil2-areas-contaminadas" style="color: #d32f2f; font-weight: bold;">-</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4><i class="fas fa-users-cog"></i> Gerenciamento de Usuários</h4>
+                    <div class="loading" id="usersLoading">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando usuários...
+                    </div>
+                    <div id="usersTableContainer" style="display: none;">
+                        <table class="data-table table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Matrícula</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;"><i class="fas fa-tasks"></i> Ações de Diretores</h4>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="viewRestrictedReports()">
+                            <i class="fas fa-file-contract"></i>
+                            <span>Relatórios Restritos</span>
+                        </button>
+                        <button class="action-btn" onclick="viewInspectionData()">
+                            <i class="fas fa-clipboard-check"></i>
+                            <span>Dados de Fiscalização</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h4><i class="fas fa-chart-area"></i> Análises Estratégicas</h4>
+                <div class="alert-custom" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+                    <strong><i class="fas fa-info-circle"></i> Informações Restritas</strong><br>
+                    Análises sobre contaminação de lençóis freáticos, rios e mares por agrotóxicos proibidos. 
+                    Mapeamento de propriedades irregulares e impactos ambientais críticos.
+                </div>
+            </div>
+        </div>
+
+        <!-- ROLE_PERFIL_1 Section -->
+        <div class="content-card role-section" id="section-perfil1">
+            <h2><i class="fas fa-user"></i> Painel do Usuário - Intranet MMA</h2>
+            <div class="alert-custom" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
+                <strong><i class="fas fa-globe"></i> Informações Públicas da Intranet</strong><br>
+                Informações gerais do Ministério do Meio Ambiente sobre agrotóxicos, legislação ambiental e orientações. Acesso disponível para todos os usuários do sistema.
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h4><i class="fas fa-leaf"></i> Informações Gerais MMA</h4>
+                    <div class="data-table">
+                        <table class="table table-sm">
+                            <tr style="background: #e8f5e9;"><td colspan="2"><strong>Estatísticas Públicas</strong></td></tr>
+                            <tr><td>Relatórios Públicos:</td><td id="perfil1-relatorios-publicos">-</td></tr>
+                            <tr><td>Agrotóxicos Catalogados:</td><td id="perfil1-total-agrotoxicos">-</td></tr>
+                            <tr><td>Legislações Disponíveis:</td><td id="perfil1-legislacoes">-</td></tr>
+                        </table>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;"><i class="fas fa-user-circle"></i> Suas Informações</h4>
+                    <div class="data-table">
+                        <table class="table table-sm">
+                            <tr><td><strong>Nome:</strong></td><td id="perfil1-nome">-</td></tr>
+                            <tr><td><strong>Email:</strong></td><td id="perfil1-email">-</td></tr>
+                            <tr><td><strong>Matrícula:</strong></td><td id="perfil1-matricula">-</td></tr>
+                            <tr><td><strong>Órgão:</strong></td><td id="perfil1-orgao">-</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4><i class="fas fa-chart-line"></i> Suas Atividades</h4>
+                    <div class="data-table">
+                        <table class="table table-sm">
+                            <tr><td><strong>Templates Cadastrados:</strong></td><td id="perfil1-templates">-</td></tr>
+                            <tr><td><strong>Último Login:</strong></td><td id="perfil1-last-login">-</td></tr>
+                            <tr><td><strong>Total de Acessos:</strong></td><td id="perfil1-total-logins">-</td></tr>
+                        </table>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;"><i class="fas fa-book"></i> Recursos Disponíveis</h4>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="viewPublicReports()">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Relatórios Públicos</span>
+                        </button>
+                        <button class="action-btn" onclick="viewLegislation()">
+                            <i class="fas fa-gavel"></i>
+                            <span>Legislação Ambiental</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content-card">
+            <h2><i class="fas fa-cogs"></i> Ações Disponíveis</h2>
+            
+            <div class="action-buttons">
+                <button class="action-btn" onclick="updateBiometry()">
+                    <i class="fas fa-camera"></i>
+                    <span>Atualizar Biometria</span>
+                </button>
+                
+                <button class="action-btn" onclick="viewProfile()">
+                    <i class="fas fa-user-cog"></i>
+                    <span>Meu Perfil</span>
+                </button>
+                
+                <button class="action-btn" onclick="viewHelp()">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Ajuda</span>
+                </button>
+                
+                <a href="#" class="action-btn btn-logout" id="logoutBtn2">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sair do Sistema</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Biometric Status -->
+        <div class="content-card">
+            <h2><i class="fas fa-shield-alt"></i> Segurança</h2>
+            
+            <div class="biometric-status active">
+                <i class="fas fa-lock"></i>
+                <div>
+                    <strong>Autenticação Biométrica Ativada</strong>
+                    <div style="font-size: 14px; margin-top: 5px;">
+                        Seu acesso está protegido por reconhecimento facial
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <p><i class="fas fa-info-circle"></i> <strong>Informações de Segurança:</strong></p>
+                <ul>
+                    <li>Sua biometria facial está criptografada no banco de dados</li>
+                    <li>Todas as tentativas de acesso são registradas</li>
+                    <li>Sistema em conformidade com a LGPD</li>
+                    <li>Proteção anti-spoofing ativada</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Viewing Modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1e5128, #2d6a4f); color: white;">
+                    <h5 class="modal-title" id="reportModalLabel">
+                        <i class="fas fa-file-alt me-2"></i>
+                        <span id="reportModalTitle">Relatório</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="reportModalBody" style="background-color: #f8f9fa;">
+                    <div class="text-center">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div id="reportModalMeta" class="text-muted small me-auto"></div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports List Modal -->
+    <div class="modal fade" id="reportsListModal" tabindex="-1" aria-labelledby="reportsListModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">https://www.gov.br/mma/pt-br/conheca-a-nova-marca-do-mma
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1e5128, #2d6a4f); color: white;">
+                    <h5 class="modal-title" id="reportsListModalLabel">
+                        <i class="fas fa-folder-open me-2"></i>
+                        <span id="reportsListModalTitle">Relatórios Disponíveis</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="reportsListModalBody">
+                    <div class="text-center">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentUser = null;
+        let authToken = null;
+
+        // Load user info from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            authToken = localStorage.getItem('mma_auth_token');
+            const userDataJson = localStorage.getItem('mma_user_data');
+            
+            // Check if user is logged in
+            if (!authToken) {
+                window.location.href = '/';
+                return;
+            }
+            
+            // Parse and display user info
+            if (userDataJson) {
+                try {
+                    currentUser = JSON.parse(userDataJson);
+                    
+                    if (currentUser.nome) {
+                        document.getElementById('userName').textContent = 'Olá, ' + currentUser.nome;
+                    }
+                    if (currentUser.email) {
+                        document.getElementById('userEmail').textContent = currentUser.email;
+                    }
+                    
+                    // Display roles
+                    displayUserRoles(currentUser.roles);
+                    
+                    // Show role-specific sections
+                    showRoleSections(currentUser.roles);
+                    
+                    // Load role-specific data
+                    loadDashboardData(currentUser.roles);
+                    
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                }
+            }
+            
+            // Update last access time
+            const now = new Date();
+            document.getElementById('lastAccess').textContent = 
+                now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        });
+
+        function displayUserRoles(roles) {
+            const rolesContainer = document.getElementById('userRoles');
+            if (!roles || roles.length === 0) return;
+            
+            rolesContainer.innerHTML = '';
+            roles.forEach(role => {
+                const badge = document.createElement('span');
+                badge.className = 'role-badge';
+                
+                if (role === 'ROLE_MINISTRO') {
+                    badge.classList.add('ministro');
+                    badge.innerHTML = '<i class="fas fa-crown"></i> ROLE_MINISTRO';
+                } else if (role === 'ROLE_PERFIL__2') {
+                    badge.classList.add('perfil2');
+                    badge.innerHTML = '<i class="fas fa-user-shield"></i> ADMINISTRADOR';
+                } else if (role === 'ROLE_PERFIL__1') {
+                    badge.classList.add('perfil1');
+                    badge.innerHTML = '<i class="fas fa-user"></i> USUÁRIO';
+                }
+                
+                rolesContainer.appendChild(badge);
+            });
+        }
+
+        function showRoleSections(roles) {
+            if (!roles || roles.length === 0) return;
+            
+            // Show sections based on roles
+            if (roles.includes('ROLE_MINISTRO')) {
+                document.getElementById('section-ministro').classList.add('visible');
+                document.getElementById('stat-total-users').classList.add('visible');
+            }
+            
+            if (roles.includes('ROLE_PERFIL__2')) {
+                document.getElementById('section-perfil2').classList.add('visible');
+                document.getElementById('stat-total-users').classList.add('visible');
+            }
+            
+            if (roles.includes('ROLE_PERFIL__1')) {
+                document.getElementById('section-perfil1').classList.add('visible');
+            }
+        }
+
+        function loadDashboardData(roles) {
+            // Load data for ROLE_PERFIL_1 (all users)
+            if (roles.includes('ROLE_PERFIL__1')) {
+                loadUserProfile();
+            }
+            
+            // Load data for ROLE_PERFIL_2 (directors)
+            if (roles.includes('ROLE_PERFIL__2')) {
+                loadDirectorStats();
+                loadAllUsers();
+            }
+            
+            // Load data for ROLE_MINISTRO
+            if (roles.includes('ROLE_MINISTRO')) {
+                loadExecutiveStats();
+            }
+        }
+
+        async function loadUserProfile() {
+            if (!currentUser) return;
+            
+            document.getElementById('perfil1-nome').textContent = currentUser.nome || '-';
+            document.getElementById('perfil1-email').textContent = currentUser.email || '-';
+            document.getElementById('perfil1-matricula').textContent = currentUser.matricula || '-';
+            document.getElementById('perfil1-orgao').textContent = currentUser.orgao || '-';
+            
+            // Load additional user stats via API
+            try {
+                const response = await fetchWithAuth('/api/users/me/stats');
+                if (response) {
+                    document.getElementById('perfil1-templates').textContent = response.totalTemplates || '1';
+                    document.getElementById('perfil1-last-login').textContent = 
+                        response.lastLogin ? new Date(response.lastLogin).toLocaleString('pt-BR') : 'Agora';
+                    document.getElementById('perfil1-total-logins').textContent = response.totalLogins || '-';
+                    
+                    // Load public MMA stats for ROLE_PERFIL_1
+                    if (response.publicStats) {
+                        document.getElementById('perfil1-relatorios-publicos').textContent = response.publicStats.publicReports || '-';
+                        document.getElementById('perfil1-total-agrotoxicos').textContent = response.publicStats.totalAgrotoxicos || '-';
+                        document.getElementById('perfil1-legislacoes').textContent = response.publicStats.legislacoes || '3';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user stats:', error);
+            }
+            
+            // Load public statistics from stats API
+            try {
+                const publicStats = await fetchWithAuth('/api/stats/public');
+                if (publicStats) {
+                    document.getElementById('perfil1-relatorios-publicos').textContent = publicStats.relatoriosPublicos || '-';
+                    document.getElementById('perfil1-total-agrotoxicos').textContent = publicStats.totalAgrotoxicos || '-';
+                    document.getElementById('perfil1-legislacoes').textContent = publicStats.legislacoes || '3';
+                }
+            } catch (error) {
+                console.error('Error loading public stats:', error);
+            }
+        }
+
+        async function loadAllUsers() {
+            const loadingEl = document.getElementById('usersLoading');
+            const tableContainer = document.getElementById('usersTableContainer');
+            const tableBody = document.getElementById('usersTableBody');
+            
+            try {
+                loadingEl.style.display = 'block';
+                tableContainer.style.display = 'none';
+                
+                const users = await fetchWithAuth('/api/users');
+                
+                if (users && users.length > 0) {
+                    tableBody.innerHTML = '';
+                    
+                    users.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.nome || '-'}</td>
+                            <td>${user.matricula || '-'}</td>
+                            <td><span class="badge ${user.accountLocked ? 'bg-danger' : 'bg-success'}">
+                                ${user.accountLocked ? 'Bloqueado' : 'Ativo'}
+                            </span></td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    
+                    // Update stats
+                    document.getElementById('totalUsers').textContent = users.length;
+                    
+                    loadingEl.style.display = 'none';
+                    tableContainer.style.display = 'block';
+                } else {
+                    loadingEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Nenhum usuário encontrado';
+                }
+                
+            } catch (error) {
+                console.error('Error loading users:', error);
+                loadingEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erro ao carregar usuários';
+            }
+        }
+        
+        async function loadDirectorStats() {
+            try {
+                const stats = await fetchWithAuth('/api/stats/admin');
+                
+                if (stats) {
+                    // Director-level strategic information
+                    document.getElementById('perfil2-total-propriedades').textContent = stats.totalPropriedades || '-';
+                    document.getElementById('perfil2-propriedades-irregulares').textContent = stats.propriedadesIrregulares || '-';
+                    document.getElementById('perfil2-total-fiscalizacoes').textContent = stats.totalFiscalizacoes || '-';
+                    document.getElementById('perfil2-total-multas').textContent = stats.totalMultas ? 
+                        'R$ ' + Number(stats.totalMultas).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '-';
+                    document.getElementById('perfil2-relatorios-restritos').textContent = stats.relatoriosRestritos || '-';
+                    document.getElementById('perfil2-agrotoxicos-proibidos').textContent = stats.agrotoxicosProibidos || '-';
+                    document.getElementById('perfil2-areas-contaminadas').textContent = stats.areasContaminadas || '-';
+                }
+            } catch (error) {
+                console.error('Error loading director stats:', error);
+            }
+        }
+
+        async function loadExecutiveStats() {
+            try {
+                const stats = await fetchWithAuth('/api/stats/executive');
+                
+                if (stats) {
+                    // System stats
+                    document.getElementById('ministro-total-users').textContent = stats.totalUsers || '-';
+                    document.getElementById('ministro-auth-today').textContent = stats.authenticationsToday || '-';
+                    document.getElementById('ministro-success-rate').textContent = 
+                        stats.successRate ? (stats.successRate * 100).toFixed(1) + '%' : '-';
+                    document.getElementById('ministro-total-templates').textContent = stats.totalTemplates || '-';
+                    document.getElementById('totalUsers').textContent = stats.totalUsers || '-';
+                    
+                    // MMA Environmental stats
+                    document.getElementById('ministro-total-propriedades').textContent = stats.totalPropriedades || '-';
+                    document.getElementById('ministro-propriedades-irregulares').textContent = stats.propriedadesIrregulares || '-';
+                    document.getElementById('ministro-total-fiscalizacoes').textContent = stats.totalFiscalizacoes || '-';
+                    document.getElementById('ministro-fiscalizacoes-abertas').textContent = stats.fiscalizacoesAbertas || '-';
+                    document.getElementById('ministro-total-relatorios').textContent = stats.totalRelatorios || '-';
+                    document.getElementById('ministro-relatorios-ultrasecretos').textContent = stats.relatoriosUltrasecretos || '-';
+                    document.getElementById('ministro-total-agrotoxicos').textContent = stats.totalAgrotoxicos || '-';
+                    document.getElementById('ministro-agrotoxicos-proibidos').textContent = stats.agrotoxicosProibidos || '-';
+                }
+            } catch (error) {
+                console.error('Error loading executive stats:', error);
+            }
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            if (!authToken) {
+                throw new Error('No authentication token');
+            }
+            
+            const config = {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                    ...options.headers
+                }
+            };
+            
+            console.log('[DEBUG] Fetching URL:', url, 'with auth token');
+            const response = await fetch(url, config);
+            console.log('[DEBUG] Response status:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Token expired or invalid
+                    logout();
+                    return null;
+                }
+                const errorText = await response.text();
+                console.error('[DEBUG] Error response:', errorText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const jsonData = await response.json();
+            console.log('[DEBUG] JSON data:', jsonData);
+            return jsonData;
+        }
+
+        // Action functions
+        function updateBiometry() {
+            alert('Recurso de atualização de biometria em desenvolvimento.\nEm breve você poderá atualizar seus dados biométricos.');
+        }
+
+        function viewProfile() {
+            alert('Visualização completa do perfil em desenvolvimento.\n\nSuas informações:\n' +
+                  'Nome: ' + (currentUser?.nome || '-') + '\n' +
+                  'Email: ' + (currentUser?.email || '-') + '\n' +
+                  'Matrícula: ' + (currentUser?.matricula || '-'));
+        }
+
+        function viewHelp() {
+            alert('Central de Ajuda\n\n' +
+                  '• Use reconhecimento facial para fazer login\n' +
+                  '• Mantenha sua biometria atualizada\n' +
+                  '• Contate o suporte: suporte@mma.gov.br\n\n' +
+                  'Documentação completa em desenvolvimento.');
+        }
+
+        function loadExecutiveReport() {
+            showReportsList('ULTRASSECRETO', 'Relatórios Ultrasecretos - Acesso Exclusivo ROLE_MINISTRO');
+        }
+
+        function viewUltrasecretReports() {
+            showReportsList('ULTRASSECRETO', 'Relatórios Ultrasecretos - Acesso Exclusivo ROLE_MINISTRO');
+        }
+
+        function viewAllReports() {
+            showAllReportsList('Todos os Relatórios - Acesso ROLE_MINISTRO');
+        }
+
+        function viewAuditLogs() {
+            alert('Logs de Auditoria\n\nRecurso em desenvolvimento.\nEm breve você poderá visualizar todos os logs de auditoria do sistema.');
+        }
+
+        function viewSystemLogs() {
+            alert('Logs do Sistema\n\nRecurso em desenvolvimento.\nEm breve você poderá visualizar logs operacionais do sistema.');
+        }
+        
+        function viewPublicReports() {
+            showReportsList('PUBLICO', 'Relatórios Públicos - Intranet MMA');
+        }
+        
+        function viewLegislation() {
+            showReportsList('PUBLICO', 'Legislação Ambiental', 'legislacao');
+        }
+        
+        function viewRestrictedReports() {
+            showReportsList('RESTRITO', 'Relatórios Restritos - Acesso ROLE_PERFIL_2');
+        }
+        
+        function viewInspectionData() {
+            showReportsList('RESTRITO', 'Dados de Fiscalização - ROLE_PERFIL_2', 'fiscalizacao');
+        }
+        
+        async function showReportsList(confidencialidade, title, tag = null) {
+            const modal = new bootstrap.Modal(document.getElementById('reportsListModal'));
+            const modalTitle = document.getElementById('reportsListModalTitle');
+            const modalBody = document.getElementById('reportsListModalBody');
+            
+            modalTitle.textContent = title;
+            modalBody.innerHTML = '<div class="text-center"><div class="spinner-border text-success" role="status"><span class="visually-hidden">Carregando...</span></div></div>';
+            
+            modal.show();
+            
+            try {
+                let url = `/api/relatorios?confidencialidade=${confidencialidade}`;
+                if (tag) {
+                    url += `&tag=${tag}`;
+                }
+                
+                console.log('[DEBUG] Fetching reports from:', url);
+                const reports = await fetchWithAuth(url);
+                console.log('[DEBUG] Reports received:', reports);
+                
+                if (reports && reports.length > 0) {
+                    let html = '<div class="list-group">';
+                    
+                    reports.forEach(report => {
+                        const badgeClass = confidencialidade === 'ULTRASSECRETO' ? 'bg-danger' : 
+                                         confidencialidade === 'RESTRITO' ? 'bg-warning' : 'bg-success';
+                        
+                        html += `
+                            <a href="javascript:void(0)" onclick="viewReport(${report.id})" 
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1"><i class="fas fa-file-alt me-2"></i>${report.titulo}</h6>
+                                        <p class="mb-1 text-muted small">${report.resumo || ''}</p>
+                                        <div class="mt-2">
+                                            <span class="badge ${badgeClass}">${report.confidencialidade}</span>
+                                            <span class="badge bg-secondary">${report.tipo}</span>
+                                            ${report.tags ? report.tags.split(',').map(tag => 
+                                                `<span class="badge bg-light text-dark">${tag.trim()}</span>`
+                                            ).join(' ') : ''}
+                                        </div>
+                                    </div>
+                                    <div class="text-end small text-muted">
+                                        <div>${formatDate(report.publishedAt)}</div>
+                                        <div class="mt-1">${report.autor}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    modalBody.innerHTML = html;
+                } else {
+                    modalBody.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Nenhum relatório disponível nesta categoria.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading reports list:', error);
+                modalBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Erro ao carregar relatórios.</div>';
+            }
+        }
+        
+        async function showAllReportsList(title) {
+            const modal = new bootstrap.Modal(document.getElementById('reportsListModal'));
+            const modalTitle = document.getElementById('reportsListModalTitle');
+            const modalBody = document.getElementById('reportsListModalBody');
+            
+            modalTitle.textContent = title;
+            modalBody.innerHTML = '<div class="text-center"><div class="spinner-border text-success" role="status"><span class="visually-hidden">Carregando...</span></div></div>';
+            
+            modal.show();
+            
+            try {
+                // Fetch all reports (no confidencialidade filter - ROLE_MINISTRO has access to all)
+                console.log('[DEBUG] Fetching all reports from: /api/relatorios');
+                const reports = await fetchWithAuth('/api/relatorios');
+                console.log('[DEBUG] All reports received:', reports);
+                
+                if (reports && reports.length > 0) {
+                    let html = '<div class="list-group">';
+                    
+                    reports.forEach(report => {
+                        const badgeClass = report.confidencialidade === 'ULTRASSECRETO' ? 'bg-danger' : 
+                                         report.confidencialidade === 'RESTRITO' ? 'bg-warning' : 'bg-success';
+                        
+                        html += `
+                            <a href="javascript:void(0)" onclick="viewReport(${report.id})" 
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1"><i class="fas fa-file-alt me-2"></i>${report.titulo}</h6>
+                                        <p class="mb-1 text-muted small">${report.resumo || ''}</p>
+                                        <div class="mt-2">
+                                            <span class="badge ${badgeClass}">${report.confidencialidade}</span>
+                                            <span class="badge bg-secondary">${report.tipo}</span>
+                                            ${report.tags ? report.tags.split(',').map(tag => 
+                                                `<span class="badge bg-light text-dark">${tag.trim()}</span>`
+                                            ).join(' ') : ''}
+                                        </div>
+                                    </div>
+                                    <div class="text-end small text-muted">
+                                        <div>${formatDate(report.publishedAt)}</div>
+                                        <div class="mt-1">${report.autor}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    modalBody.innerHTML = html;
+                } else {
+                    modalBody.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Nenhum relatório disponível.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading all reports:', error);
+                modalBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Erro ao carregar relatórios.</div>';
+            }
+        }
+        
+        async function viewReport(reportId) {
+            const reportModalElement = document.getElementById('reportModal');
+            const modal = new bootstrap.Modal(reportModalElement, {
+                backdrop: true, // Allow closing when clicking outside
+                keyboard: true
+            });
+            const modalTitle = document.getElementById('reportModalTitle');
+            const modalBody = document.getElementById('reportModalBody');
+            const modalMeta = document.getElementById('reportModalMeta');
+            
+            modalTitle.textContent = 'Carregando relatório...';
+            modalBody.innerHTML = '<div class="text-center"><div class="spinner-border text-success" role="status"><span class="visually-hidden">Carregando...</span></div></div>';
+            modalMeta.innerHTML = '';
+            
+            modal.show();
+            
+            // Ensure the modal backdrop is also properly z-indexed
+            setTimeout(() => {
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                if (backdrops.length > 1) {
+                    backdrops[backdrops.length - 1].style.zIndex = '1055';
+                }
+            }, 100);
+            
+            try {
+                const report = await fetchWithAuth(`/api/relatorios/${reportId}`);
+                
+                if (report) {
+                    modalTitle.textContent = report.titulo;
+                    
+                    const badgeClass = report.confidencialidade === 'ULTRASSECRETO' ? 'bg-danger' : 
+                                     report.confidencialidade === 'RESTRITO' ? 'bg-warning' : 'bg-success';
+                    
+                    let html = `
+                        <div class="card mb-3">
+                            <div class="card-header" style="background-color: #1e5128; color: white;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-0">${report.titulo}</h5>
+                                    </div>
+                                    <div>
+                                        <span class="badge ${badgeClass} fs-6">${report.confidencialidade}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <strong><i class="fas fa-user me-2"></i>Autor:</strong> ${report.autor}<br>
+                                        <strong><i class="fas fa-id-badge me-2"></i>Matrícula:</strong> ${report.matriculaAutor}<br>
+                                        <strong><i class="fas fa-calendar me-2"></i>Publicado em:</strong> ${formatDate(report.publishedAt)}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong><i class="fas fa-folder me-2"></i>Tipo:</strong> ${report.tipo}<br>
+                                        <strong><i class="fas fa-globe me-2"></i>Escopo:</strong> ${report.escopo}<br>
+                                        <strong><i class="fas fa-clock me-2"></i>Período:</strong> ${formatDate(report.periodoInicio)} a ${formatDate(report.periodoFim)}
+                                    </div>
+                                </div>
+                                
+                                ${report.tags ? `
+                                <div class="mb-3">
+                                    <strong><i class="fas fa-tags me-2"></i>Tags:</strong> 
+                                    ${report.tags.split(',').map(tag => 
+                                        `<span class="badge bg-light text-dark me-1">${tag.trim()}</span>`
+                                    ).join('')}
+                                </div>
+                                ` : ''}
+                                
+                                <div class="alert alert-light border">
+                                    <strong><i class="fas fa-info-circle me-2"></i>Resumo:</strong><br>
+                                    ${report.resumo || 'Não disponível'}
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="briefing-content" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; background-color: #ffffff; padding: 20px; border: 1px solid #dee2e6; border-radius: 5px;">
+                                    ${report.briefingDetalhado || '<em>Briefing detalhado não disponível.</em>'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    modalBody.innerHTML = html;
+                    modalMeta.innerHTML = `<i class="fas fa-file-alt me-1"></i> ID: ${report.id} | Status: ${report.status}`;
+                }
+            } catch (error) {
+                console.error('Error loading report:', error);
+                modalBody.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Erro ao carregar relatório. Você pode não ter permissão para acessar este conteúdo.</div>';
+            }
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        // Logout functionality
+        function logout() {
+            if (confirm('Deseja realmente sair do sistema?')) {
+                localStorage.removeItem('mma_auth_token');
+                localStorage.removeItem('mma_user_data');
+                localStorage.removeItem('mma_errors');
+                window.location.href = '/';
+            }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+        document.getElementById('logoutBtn2').addEventListener('click', function(e) {
+            e.preventDefault();
+            logout();
+        });
+
+        // Verify token periodically
+        setInterval(function() {
+            const token = localStorage.getItem('mma_auth_token');
+            if (!token) {
+                window.location.href = '/';
+            }
+        }, 60000); // Check every minute
+    </script>
+</body>
+</html>
