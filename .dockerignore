@@ -1,0 +1,81 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Build artifacts (except final JAR)
+target/classes/
+target/generated-sources/
+target/generated-test-sources/
+target/maven-archiver/
+target/maven-status/
+target/test-classes/
+target/surefire-reports/
+target/*.jar.original
+target/*-javadoc.jar
+target/*-sources.jar
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Maven wrapper (we use Docker Maven)
+.mvn/
+mvnw
+mvnw.cmd
+
+# Documentation
+README.md
+CHANGELOG.md
+*.md
+
+# Docker files (except what we need)
+docker-compose.override.yml
+docker-compose.prod.yml
+Dockerfile.build
+build-jar.sh
+build-jar.ps1
+
+# Test files
+src/test/
+
+# Configuration files for local development
+application-local.yml
+application-dev.yml
+
+# Node modules (if any frontend build)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python files (if any)
+*.pyc
+__pycache__/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+
+# Version file (handled by build script)
+VERSION
