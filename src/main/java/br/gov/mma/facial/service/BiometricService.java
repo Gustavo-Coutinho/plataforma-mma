@@ -108,7 +108,7 @@ public class BiometricService {
      */
     public byte[] extractFaceTemplate(String imageBase64) {
         try {
-            logger.debug("Iniciando extração de template facial");
+            logger.debug(" Iniciando...tração de template facial");
 
             // Decodificar imagem base64
             byte[] imageBytes = Base64.getDecoder().decode(imageBase64);
@@ -274,7 +274,7 @@ public class BiometricService {
      */
     public User identifyUser(byte[] probeTemplate) {
         try {
-            logger.debug("Iniciando identificação biométrica");
+            logger.debug(" Iniciando...entificação biométrica");
 
             // Buscar todos os templates ativos
             List<FaceTemplate> templates = faceTemplateRepository.findAllPrimaryTemplates();
@@ -318,7 +318,7 @@ public class BiometricService {
      */
     public boolean enrollUserFace(User user, List<String> faceImagesBase64, boolean replaceExisting) {
         try {
-            logger.info("Iniciando cadastro biométrico para usuário: {}", user.getEmail());
+            logger.info(" Iniciando...dastro biométrico para usuário: {}", user.getEmail());
 
             // Se substituir existente, remover templates antigos
             if (replaceExisting) {

@@ -12,7 +12,7 @@ class App {
     }
 
     init() {
-        console.log(`🚀 MMA Facial Auth System v${this.version} - Initializing...`);
+        console.log(`🚀 Plataforma de Inteligência Ambiental v${this.version} Iniciando...`);
         
         // Check browser compatibility
         this.checkBrowserCompatibility();
@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add helpful console messages
     console.log(`
-    🌿 Plataforma de Inteligência Ambiental - MMA
+    🌿 Plataforma de Inteligência Ambiental do MMA
     
     Comandos úteis:
     - Ctrl/Cmd + Enter: Iniciar câmera ou autenticar

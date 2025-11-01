@@ -18,7 +18,7 @@ public class WebController {
      */
     @GetMapping("/")
     public String index(Model model) {
-        model.addAttribute("pageTitle", "Plataforma de Inteligência Ambiental - MMA");
+        model.addAttribute("pageTitle", "Plataforma de Inteligência Ambiental do MMA");
         model.addAttribute("systemName", "Plataforma de Inteligência Ambiental");
         model.addAttribute("organization", "Ministério do Meio Ambiente - Brasil");
         model.addAttribute("version", "v1.0.0");

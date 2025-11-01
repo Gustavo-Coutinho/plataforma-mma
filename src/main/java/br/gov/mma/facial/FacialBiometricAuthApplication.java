@@ -58,7 +58,7 @@ public class FacialBiometricAuthApplication {
         // Configurações adicionais de inicialização
         app.setAdditionalProfiles(getActiveProfiles());
 
-        System.out.println("🚀 Iniciando Plataforma de Inteligência Ambiental - MMA");
+        System.out.println("🚀  Iniciando...ataforma de Inteligência Ambiental do MMA");
         System.out.println("📋 Perfil ativo: " + String.join(", ", getActiveProfiles()));
 
         app.run(args);
