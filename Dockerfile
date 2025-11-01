@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile para Plataforma de Inteligência Ambiental - MMA
+# Multi-stage Dockerfile para Plataforma de Inteligência Ambiental do MMA
 # Optimized with layered JAR approach for faster builds and smaller layers
 
 # Stage 1: Base dependencies (cached layer)
