@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Script de inicialização para o Plataforma de Inteligência Ambiental
-echo "🚀 Inicializando Plataforma de Inteligência Ambiental - MMA"
+# Script de inicialização para a Plataforma de Inteligência Ambiental
+echo "🚀 Inicializanda Plataforma de Inteligência Ambiental do MMA"
 
 # Verificar se estamos rodando como root
 if [ "$(id -u)" -ne 0 ]; then
@@ -39,7 +39,7 @@ echo "🔍 Verificando links simbólicos criados:"
 ls -la /tmp/opencv-links/
 
 # Iniciar a aplicação
-echo "✨ Iniciando aplicação..."
+echo "✨  Iniciando aplicação..."
 exec java $JAVA_OPTS \
   -Djava.security.egd=file:/dev/./urandom \
   -Djava.library.path=/usr/local/lib/opencv:/usr/lib:/lib \
